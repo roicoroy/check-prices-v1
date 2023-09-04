@@ -1,0 +1,7 @@
+{
+  "name": "check-prices-v1",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
