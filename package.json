@@ -36,7 +36,20 @@
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.13.0"
+    "zone.js": "~0.13.0",
+    "@angular/cdk": "^16.1.7",
+    "@capacitor-mlkit/barcode-scanning": "^5.1.0",
+    "@capacitor/device": "^5.0.6",
+    "@capacitor/share": "^5.0.6",
+    "@capacitor/splash-screen": "^5.0.6",
+    "@ionic/pwa-elements": "^3.2.2",
+    "@ionic/storage-angular": "^4.0.0",
+    "@types/uuid": "^9.0.2",
+    "date-fns": "^2.30.0",
+    "dayjs": "^1.11.9",
+    "nanoid": "^4.0.2",
+    "uuid": "^9.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^16.0.0",
