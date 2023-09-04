@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'check-prices-v1',
+  appId: 'io.check.prices',
+  appName: 'check-prices-mobile',
   webDir: 'www',
   server: {
     androidScheme: 'https'
