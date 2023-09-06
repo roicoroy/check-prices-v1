@@ -1,19 +1,23 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
+import { Filesystem, WriteFileResult } from '@capacitor/filesystem';
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { StorageService } from '../services/storage.service';
 import { AppService } from '../services/app.service';
-import { DIRECTORY_DOCUMENTS, FILE } from '../services/app.const';
+import { IFile } from '../services/app.const';
 import { FileOpener } from '@capawesome-team/capacitor-file-opener';
 import { FileSystemService } from '../services/file-system.service';
+import { AlertService } from '../services/alert.service';
+import { AlertController } from '@ionic/angular';
+import * as JSZip from 'JSZip';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   public plugins = [
     {
       name: 'File Opener',
@@ -31,6 +35,8 @@ export class HomePage implements OnInit {
 
   private fsService = inject(FileSystemService);
 
+  private alertController = inject(AlertController);
+
   files: any = [];
 
   iconStatus = true;
@@ -41,102 +47,120 @@ export class HomePage implements OnInit {
 
   loading: any;
 
+  filePath: string = '';
+
   public copyToAppDirectory: boolean = false;
 
   constructor(
-    public storage: StorageService,
+    public storageService: StorageService,
     public appService: AppService,
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    // this.loadFiles();
+  async ngOnInit(): Promise<void> {
+    await this.loadDirectory();
   }
 
-  async loadFiles() {
-    const contents = await Filesystem.readFile({
-      path: '/',
-      directory: Directory.Documents,
-      encoding: Encoding.UTF8,
-    });
-    console.log(contents);
+  async loadDirectory() {
+    this.files = await this.fsService.readDirectory();
   }
 
-  async loadFile(path: string) {
-    const contents = await Filesystem.readFile({
-      path: `/${path}`,
-      directory: Directory.Documents,
-      encoding: Encoding.UTF8,
-    });
-    console.log(contents);
-  }
-
-  public async pickFile(): Promise<void> {
-    const { files } = await FilePicker.pickFiles();
-    const incomingFile = files[0];
-
-    console.log(incomingFile);
-
-    if (incomingFile.path) {
-
-      await Filesystem.writeFile({
-        data: incomingFile.path,
-        path: `/${incomingFile.name}`,
-        directory: DIRECTORY_DOCUMENTS,
-      });
-      const { uri } = await Filesystem.getUri({
-        path: `/${incomingFile.name}`,
-        directory: DIRECTORY_DOCUMENTS,
-      });
-    }
-
-    // const extension = incomingFile.name.split('.').pop();
-    // if (extension === 'xlsx' || extension === 'xls') {
-    //   const file = await this.storage.addFile(incomingFile);
-    //   this.loadFiles();
-    // } else {
-    //   alert('Format not acceptable');
-    // }
-  }
-
-  async deleteFromStorage(file: File, i: number) {
-    await this.storage.deleteFile(file, i);
-    await this.loadFiles();
-  }
-
-  async delete(entry: any) {}
-
-  async viewFile(f: File) {
-    const file_uri = await Filesystem.getUri({
-      path: f.name,
-      directory: DIRECTORY_DOCUMENTS,
-    });
-
-    // await this.openFile(file_uri.uri);
-    this.loadFile(f.name);
-  }
-
-  public async openFile(uri: string): Promise<void> {
-    if (!uri) {
+  async viewFile(f: IFile) {
+    const file_uri = this.fsService.getUri(f.name);
+    if (!file_uri) {
       return;
     }
-    await FileOpener.openFile({ path: uri });
-    console.log('File opened');
+    await FileOpener.openFile({ path: (await file_uri).uri });
   }
 
-  async clearApp() {
-    await this.storage.storageRemove(FILE);
+  public async pickFile(): Promise<WriteFileResult> {
+    await Filesystem.requestPermissions();
+
+    const { files } = await FilePicker.pickFiles({
+      readData: true,
+    });
+
+    const file: any = files[0];
+    console.log(file);
+
+    const fileResponse: WriteFileResult = await this.fsService.writeFile(file);
+
+    await this.loadDirectory();
+
+    return fileResponse;
   }
 
-  scanner(f: any) {
-    const params = {
-      fileName: f.name,
-      size: f.size,
-    };
-    this.router.navigate([`/scanner/`, params]);
+  async onChangeFile(event: any) {
+    //const input = event.target;
+    const input: DataTransfer = event.target as DataTransfer;
+    const uploadedFile = input.files[0];
 
-    // this.router.navigate(['scanner'], {
-    //   queryParams: { order: 'popular', 'price-range': 'expensive' },
-    // });
+    if (!uploadedFile) return;
+
+    try {
+      const zip = await JSZip.loadAsync(uploadedFile);
+      const isxlsxFile = (name: any) => name.toLowerCase().endsWith('.xlsx');
+      const fileInZip = Object.keys(zip.files);
+      const firstxlsxFile = fileInZip.find(isxlsxFile);
+      if (!firstxlsxFile) return window.alert('NO Excel file found');
+      const xlsxData: any = await zip.file(firstxlsxFile)?.async('blob');
+      const reader: FileReader = new FileReader();
+      reader.readAsBinaryString(xlsxData);
+      reader.onload = (e: any) => {
+        const binarystr: string = e.target.result;
+        const wb: XLSX.WorkBook = XLSX.read(binarystr, { type: 'binary' });
+        const wsname: string = wb.SheetNames[0];
+        const ws: XLSX.WorkSheet = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+        console.table(data);
+      };
+    } catch (error) {
+      alert('somthing went wrong');
+      console.error(error);
+    }
   }
+
+  async deleteFromDocuments(file: IFile) {
+    await this.fsService.deleteFile(file.uri);
+    await this.loadDirectory();
+  }
+
+  async scanner(f: IFile) {
+    await this.presentAlert(f.name, f.ctime);
+  }
+
+  async presentAlert(fileName: string, ctime: string) {
+    const alertButtons = [
+      {
+        text: 'Cancel',
+        role: 'cancel',
+        handler: () => {},
+      },
+      {
+        text: 'OK',
+        role: 'confirm',
+        handler: () => {
+          const params = {
+            fileName,
+            ctime: ctime,
+          };
+          this.router.navigate([`/scanner/`, params]);
+        },
+      },
+    ];
+    const alert = await this.alertController.create({
+      header: 'Are you sure?',
+      subHeader: 'If you want to use this file, press ok',
+      message: fileName,
+      buttons: alertButtons,
+    });
+
+    await alert.present();
+  }
+
+  create() {
+    this.router.navigate([`/create/`]);
+  }
+
+  async ngOnDestroy(): Promise<void> {}
 }

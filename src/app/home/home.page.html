@@ -3,9 +3,9 @@
     <ion-title>
       Check Prices
     </ion-title>
-    <ion-buttons slot="start">
-      <ion-button (click)="loadFiles()">
-        Load Files
+    <ion-buttons slot="end">
+      <ion-button (click)="create()">
+        Create
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -23,27 +23,28 @@
       <ion-col size="12">
 
         <ion-list>
-
-          <ion-item-sliding *ngFor="let f of files; let i=index">
+          
+          <ion-item-sliding *ngFor="let f of files.files; let i=index">
             <ion-item>
-              <ion-col size="2">
+              <ion-col size="3">
                 <ion-icon name="search" (click)="viewFile(f)"></ion-icon>
               </ion-col>
-              <ion-col size="8" (click)="scanner(f)">
+              <ion-col size="6" (click)="scanner(f)">
                 <p>{{ f?.name }}</p>
               </ion-col>
-              <ion-col size="2">
-                <ion-note>{{ f.blob?.lastModifiedDate | date }}</ion-note>
+              <ion-col size="3" (click)="scanner(f)">
+                <p>{{ f?.mtime | date }}</p>
               </ion-col>
             </ion-item>
 
             <ion-item-options side="start">
-              <ion-item-option (click)="deleteFromStorage(f, i)" color="danger">
+              <ion-item-option (click)="deleteFromDocuments(f)" color="danger">
                 <ion-icon name="trash" slot="icon-only"></ion-icon>
               </ion-item-option>
             </ion-item-options>
-
+            
           </ion-item-sliding>
+
         </ion-list>
 
       </ion-col>
@@ -57,4 +58,3 @@
   </ion-fab>
 
 </ion-content>
-

@@ -1,4 +1,4 @@
-import { Directory } from "@capacitor/filesystem";
+import { Directory } from '@capacitor/filesystem';
 
 export const FILE = 'file';
 
@@ -13,8 +13,20 @@ export const PRICE_LIST = 'priceList';
 export const FIREBIRD_PRICE_LIST = 'priceList';
 
 export const DIRECTORY_DOCUMENTS = Directory.Documents;
+
+export const FILE_PATH = 'filePath';
+
 export const FOLDER_NAME = '/';
 
+export const SAVED_FILES = 'saved_files';
+
+export const NAVIGATE_FILE = 'navigate_file';
+
+export const REFERENCE_OBJ = 'referenceObject';
+
+export const EXCEL_TYPE =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+export const EXCEL_EXTENSION = '.xlsx';
 export interface ExcelData {
   // CODIGO: any;
   // Name: any;
@@ -35,4 +47,15 @@ export interface IProduct {
   PRECO_VENDA?: any;
   QUANTIDADE?: string;
   MARCA?: string;
+}
+
+export interface IFile {
+  ctime: string;
+  mtime: string;
+  name: string;
+  size: string;
+  type: string;
+  uri: string;
+  path?: string;
+  data?: any;
 }

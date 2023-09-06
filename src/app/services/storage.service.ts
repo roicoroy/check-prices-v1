@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Storage } from '@ionic/storage-angular';
 import { Device, DeviceInfo } from '@capacitor/device';
 import * as uuid from 'uuid';
+import { EXCEL_TYPE, IFile, REFERENCE_OBJ, SAVED_FILES } from './app.const';
 
 @Injectable({
   providedIn: 'root',
@@ -29,24 +30,28 @@ export class StorageService {
   }
 
   // Create
-  addFile(item: any): Promise<File> {
-    return this.storage.get(SAVED_FILES).then((items: any[]) => {
+  addReferemceObj(item: any): Promise<File> {
+    return this.storage.get(REFERENCE_OBJ).then((items: any[]) => {
       if (items) {
         items.push(item);
-        return this.storage.set(SAVED_FILES, items);
+        return this.storage.set(REFERENCE_OBJ, items);
       } else {
-        return this.storage.set(SAVED_FILES, [item]);
+        return this.storage.set(REFERENCE_OBJ, [item]);
       }
     });
   }
 
-  // Read
-  getFiles(): Promise<File[]> {
-    return this.storage.get(SAVED_FILES);
+  // // Read
+  // getFiles(): Promise<File[]> {
+  //   return this.storage.get(SAVED_FILES);
+  // }
+
+  async getFilesParameter(params: string): Promise<File[]> {
+    return await this.storage.get(params);
   }
 
-  getFile(fileName: string, size: number): Promise<File> {
-    return this.storage.get(SAVED_FILES).then((savedItems: File[]) => {
+  getReferemceObj(fileName: string, size: number): Promise<File> {
+    return this.storage.get(REFERENCE_OBJ).then((savedItems: File[]) => {
       let returnItem: any;
       savedItems.forEach((file) => {
         if (file.name == fileName && file.size == size) {
@@ -58,12 +63,12 @@ export class StorageService {
   }
 
   // Delete
-  async deleteFile(file: File, index: number): Promise<File[]> {
-    return this.storage.get(SAVED_FILES).then(async (savedItems: File[]) => {
+  async deleteFile(file: IFile, index: number): Promise<IFile[]> {
+    return this.storage.get(REFERENCE_OBJ).then(async (savedItems: IFile[]) => {
       if (!savedItems || savedItems.length === 0) {
         return null;
       }
-      const itemsToKeep: File[] = [];
+      const itemsToKeep: IFile[] = [];
       // console.log(file.name);
       savedItems.forEach((item, i) => {
         // console.log(item.name, i );
@@ -73,24 +78,21 @@ export class StorageService {
         }
       });
       // return itemsToKeep;
-      return await this.storage.set(SAVED_FILES, itemsToKeep);
+      return await this.storage.set(REFERENCE_OBJ, itemsToKeep);
     });
   }
 
   async blobToFile(blob: Blob): Promise<File> {
     const generatedId = uuid.v4();
-    const resBlob = new Blob([blob], { type: 'application/pdf' });
-    const file = new File([resBlob], `pdf-file-${generatedId}`, {
+    const resBlob = new Blob([blob], { type: EXCEL_TYPE });
+    const file = new File([resBlob], `excel-file-${generatedId}`, {
       type: blob.type,
     });
     return file;
   }
 
-  async fileToBlob(file: File): Promise<Blob> {
-    const blob = new Blob([file], { type: file.type });
+  async fileToBlob(data: string | Blob): Promise<Blob> {
+    const blob = new Blob([data]);
     return blob;
   }
 }
-
-const SAVED_FILES = 'saved_files';
-export const NAVIGATE_FILE = 'navigate_file';
