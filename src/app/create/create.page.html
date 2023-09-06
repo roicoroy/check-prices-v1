@@ -21,32 +21,35 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-grid>
-    <ion-row>
-      <ion-col size="12">
-        <form [formGroup]="productForm">
-          <ion-button type="button" (click)="addProduct()">Add Product</ion-button>
+  <form [formGroup]="productForm">
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12">
           <div formArrayName="products">
-            <ion-item *ngFor="let piece of getArray.controls; let i=index" [formGroupName]="i">
-              <ion-icon item-end color="danger" name="trash" (click)="deletePiece(i)">
-              </ion-icon>
+            <div *ngFor="let piece of getArray.controls; let i=index" [formGroupName]="i">
+              <ion-icon color="danger" name="trash" (click)="deletePiece(i)"></ion-icon>
               <ion-item>
+                <ion-label>Code</ion-label>
                 <ion-input formControlName="CODIGO"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label>Name</ion-label>
                 <ion-input formControlName="NAME"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label>Price</ion-label>
                 <ion-input formControlName="PRECO_VENDA"></ion-input>
               </ion-item>
-            </ion-item>
+            </div>
           </div>
-        </form>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </form>
 
-  <!-- {{ productForm.value.products | json }} -->
-
-  <div *ngFor='let p of productForm.value.products'>
+  <!-- <div *ngFor='let p of productForm.value.products'>
     {{ p | json }}
-  </div>
+  </div> -->
 
   <!-- <ion-list>
     <ion-item-sliding *ngFor="let f of files.files; let i=index">
@@ -70,7 +73,7 @@
   </ion-list> -->
 
 </ion-content>
-<ion-footer>
+<ion-footer eqmHideWhenKeypadVisible @scaleHeight>
   <ion-toolbar>
     <ion-button (click)="onSubmitForm()" expand="block" fill="solid" shape="round">
       Submit

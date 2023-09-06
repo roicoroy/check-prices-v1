@@ -8,11 +8,15 @@ import { EXCEL_EXTENSION, EXCEL_TYPE } from '../services/app.const';
 import { WriteFileResult } from '@capacitor/filesystem';
 import * as uuid from 'uuid';
 import * as FileSaver from 'file-saver';
+import { scaleHeight } from '../shared/animations/animations';
 
 @Component({
   selector: 'app-create',
   templateUrl: './create.page.html',
   styleUrls: ['./create.page.scss'],
+  animations: [
+    scaleHeight()
+  ],
 })
 export class CreatePage implements OnInit {
   private fsService = inject(FileSystemService);
